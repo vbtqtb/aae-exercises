@@ -1,0 +1,128 @@
+use "C:\Users\brand\OneDrive\Dokumente\Arbeit\stata\aae/card.dta", clear
+
+*********************************************************************************	
+
+/* TASK 1: COMPARISON OF OLS AND IV */	
+
+*********************************************************************************
+
+/* Reestimate findings from Card */
+
+/* In table 2: Regression 1 */
+
+reg lwage educ exper expersq black south smsa
+
+scalar educ_coeff = _b[educ]
+
+/* In table 2: Regression 2 */
+
+reg lwage educ exper expersq black south smsa ///
+	reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669 smsa66
+
+/* In table 2: Regression 3 */
+
+reg lwage educ exper expersq black south smsa ///
+	reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669 ///
+	smsa66 fatheduc motheduc 
+
+/* In table 2: Regression 4 */
+
+reg lwage educ exper expersq black south smsa ///
+	reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669 ///
+	smsa66 fatheduc motheduc 
+
+* where is interacted parental education classes?	
+	
+/* In table 2: Regression 5 */
+
+reg lwage educ exper expersq black south smsa ///
+	reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669 ///
+	smsa66 fatheduc motheduc momdad14 sinmom14
+	
+ivregress 2sls lwage ///
+    exper expersq black south smsa ///
+    reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669 ///
+    (educ = nearc4), first
+
+*********************************************************************************	
+
+/* TASK 2: COMPLIER ANALYSIS */	
+
+*********************************************************************************
+
+gen highfather = (fatheduc>=12) if fatheduc<.
+
+foreach g in black south smsa highfather {
+
+    reg educ nearc4 exper expersq ///
+        black south smsa ///
+		reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669
+
+        if `g'==0
+
+    di "Group `g'=0"
+    di _b[nearc4]
+
+    reg educ nearc4 exper expersq ///
+        black south smsa ///
+		reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669
+
+        if `g'==1
+
+    di "Group `g'=1"
+    di _b[nearc4]
+}
+
+
+*********************************************************************************	
+
+/* TASK 3: COMPLIER ANALYSIS */	
+
+*********************************************************************************
+
+reg educ exper expersq black smsa south smsa66 ///
+    reg661 reg662 reg663 reg664 reg665 reg666 reg667 reg668 reg669
+	
+predict educ_resid, resid
+
+tabstat educ_resid, by(nearc4) ///
+    stat(mean sd var n)
+
+tabstat educ_resid, by(black) ///
+    stat(mean sd var n)
+
+tabstat educ_resid, by(south) ///
+    stat(mean sd var n)
+	
+tabstat educ_resid, by(smsa66) ///
+    stat(mean sd var n)
+
+graph box educ_resid, over(nearc4)
+
+graph box educ_resid, over(black)
+
+sdtest educ_resid, by(nearc4)
+
+sdtest educ_resid, by(black)
+
+table nearc4, ///
+    statistic(mean educ_resid) ///
+    statistic(sd educ_resid)
+
+table black, ///
+    statistic(mean educ_resid) ///
+    statistic(sd educ_resid)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
